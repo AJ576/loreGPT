@@ -3,10 +3,12 @@ from bs4 import BeautifulSoup
 import json
 import re
 from urllib.parse import urljoin
-import time
+import os
 import html
+import time
+import random
 
-BASE_URL = "https://coppermind.net/wiki/Kaladin"
+BASE_URL = "https://coppermind.net"
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -18,6 +20,7 @@ session = requests.Session()
 session.headers.update(HEADERS)
 
 pages = set()
+visited = set()
 
 def clean_text(text):
     # Remove citation brackets [1] and edit markers [edit]
@@ -34,7 +37,7 @@ def parse_article(url):
 
     print(f"GET {url} -> {response.status_code}")
     if response.status_code != 200:
-        # optional: fallback with cloudscraper if Cloudflare is blocking you
+        # optional: fallback with cloudscraper if Cloudflare is blocking
         try:
             import cloudscraper
             scraper = cloudscraper.create_scraper()
@@ -75,7 +78,32 @@ def parse_article(url):
         elif child.name in ["ul", "ol"]:
             items = [f"- {clean_text(li.get_text())}" for li in child.find_all("li")]
             section[current_section] += "\n".join(items) + "\n"
+        
+    for child in content_div.find_all('a'):
+        unwanted_prefixes = (
+            '/wiki/File:',
+            '/wiki/Category:',
+            '/wiki/Help:',
+            '/wiki/User:',
+            '/wiki/User_talk:',
+            '/wiki/Special:',
+            '/wiki/Summary:',
+            '/wiki/Template:',
+            '/wiki/Template_talk:',
+            '/wiki/Coppermind:',
+            '/wiki/Illustrator:',
+            '/wiki/Map:',
+            '/wiki/Cite:',
+            '/wiki/Help_talk:',
+        )
 
+        link = child.get('href')
+        if link and link.startswith('/wiki/') and not link.startswith(unwanted_prefixes) and link not in pages and link not in visited:
+            if re.search(r'/Gallery$', link):
+                continue
+            full_url = urljoin(BASE_URL, link)
+            pages.add(full_url)
+            
     return {
         "title": title,
         "url": url,
@@ -83,19 +111,28 @@ def parse_article(url):
     }
 
 def save_json_to_file(data):
-    """
-    Saves a JSON object to a file.
 
-    Args:
-        data: The JSON object (dict or list) to save.
-        filename: The name of the file to save to.
-    """
-    filename = f"{data['title'].replace(' ', '_')}.json"
+    title_cleaned = re.sub(r'[\\/*?:"<>|]', "", data['title'])
+    filename = f"{title_cleaned.replace(' ', '_')}.json"
+
+    folder = "data"
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    filename = os.path.join(folder, filename)
     with open(filename, 'w') as file:
 
         json.dump(data, file, indent=4)
 
 if __name__ == "__main__":
-    save_json_to_file(parse_article(BASE_URL))
+    pages.add(BASE_URL+"/wiki/Kaladin")
+    while pages:
+        page = pages.pop()
+        data = parse_article(page)
+        if data is None:
+            continue
+        save_json_to_file(data)
+        visited.add(page)
+        time.sleep(random.uniform(5, 10))  # Sleep for a random time between 1 and 3 seconds to avoid overwhelming the server
+    print(pages)
 
     
