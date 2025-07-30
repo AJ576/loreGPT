@@ -22,10 +22,12 @@ def build_faiss_index():
             })
 
     #then convert the embeddings to a numpy array and create a faiss index
+    # Normalize for cosine simin
     embeddings = np.array(embeddings).astype("float32")
+    embeddings /= np.linalg.norm(embeddings, axis=1, keepdims=True)  # cosine normalization
     dim = embeddings.shape[1]
 
-    index = faiss.IndexFlatL2(dim)
+    index = faiss.IndexFlatIP(dim)
     index.add(embeddings)
 
     #save the index and metadata to files

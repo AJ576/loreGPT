@@ -13,12 +13,21 @@ def embed_all_chunks(INPUT, OUTPUT):
         for line in tqdm(infile, desc="Embedding Chunks"):
             chunk = json.loads(line)
             text = chunk["text"]
-            embedding = model.encode(text).tolist()  
+
+            lines = text.strip().split("\n")
+            header = lines[0] if lines[0].startswith("## ") else ""
+            body = "\n".join(lines[1:]) if header else text
+
+            # Use header+body for embedding to provide semantic cues
+            embedding_input = f"{header}\n{body}" if header else text
+            embedding = model.encode(embedding_input, normalize_embeddings=True).tolist()
 
             output = {
+                
                 "doc_id": chunk["doc_id"],
                 "chunk_index": chunk["chunk_index"],
-                "text": text,
+                "header": header,
+                "text": body,
                 "embedding": embedding
             }
 
