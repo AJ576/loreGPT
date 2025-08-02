@@ -2,7 +2,7 @@ import sentence_transformers
 import json
 from tqdm import tqdm
 
-INPUT = "chunked_docs.jsonl"
+INPUT = "chunked_doc_deduped.jsonl"
 OUTPUT = "embeddings.jsonl"
 MODEL_NAME = "all-MiniLM-L6-v2"
 
