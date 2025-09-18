@@ -2,9 +2,9 @@ import faiss
 import json
 import numpy as np
 
-INPUT = "embeddings.jsonl"
-INDEX_FILE = "faiss_index.index"
-META_FILE = "meta.jsonl"
+INPUT = "../data/embeddings/embeddings.jsonl"
+INDEX_FILE = "../data/index/faiss_index.index"
+META_FILE = "../data/index/meta.jsonl"
 
 def build_faiss_index():
     embeddings = []

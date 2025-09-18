@@ -2,8 +2,8 @@ import json
 import re
 import tiktoken
 
-INPUT = "processed_docs.jsonl"
-OUTPUT = "chunked_docs.jsonl"
+INPUT = "../data/embeddings/processed_docs.jsonl"
+OUTPUT = "../data/embeddings/chunked_docs.jsonl"
 
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 100

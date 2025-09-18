@@ -1,8 +1,8 @@
 import hashlib
 import json
 
-INPUT = "chunked_docs.jsonl"
-OUTPUT = "chunked_doc_deduped.jsonl"
+INPUT = "../data/embeddings/chunked_docs.jsonl"
+OUTPUT = "../data/embeddings/chunked_doc_deduped.jsonl"
 
 seen_hashes = set()
 deduped_count = 0

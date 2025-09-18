@@ -3,8 +3,8 @@
 import os
 import json
 
-INPUT_FOLDER = "data/"
-OUTPUT_FILE = "processed_docs.jsonl"  # line-delimited JSON output
+INPUT_FOLDER = "../data/raw_data"
+OUTPUT_FILE = "../data/embeddings/processed_docs.jsonl"  # line-delimited JSON output
 
 def normalize_article(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
