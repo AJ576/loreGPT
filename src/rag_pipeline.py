@@ -4,7 +4,15 @@ import numpy as np
 import torch
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from dotenv import load_dotenv
+import os
+import google.generativeai as genai
 
+load_dotenv()
+api_key = os.getenv("GEMINI_API_KEY")
+
+
+genai.configure(api_key=api_key)
 
 INDEX_FILE = "data/index/faiss_index.index"
 META_FILE = "data/index/meta.jsonl"
@@ -14,7 +22,7 @@ LLM_MODEL_NAME = "microsoft/phi-3-mini-4k-instruct"
 
 
 class RAGPipeline:
-    def __init__(self):
+    def __init__(self,llm='local'):
         # Load once
         self.embedder = SentenceTransformer(EMBED_MODEL_NAME)
         self.index = faiss.read_index(INDEX_FILE)
@@ -22,12 +30,20 @@ class RAGPipeline:
 
         self.reranker = CrossEncoder(RERANK_MODEL_NAME)
 
-        self.llm_tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
-        self.llm_model = AutoModelForCausalLM.from_pretrained(
-            LLM_MODEL_NAME,
-            torch_dtype=torch.float16,
-            device_map="auto"
-        )
+        
+        if llm == "local":
+            self.llm_type = "local"
+            self.llm_tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
+            self.llm_model = AutoModelForCausalLM.from_pretrained(
+                LLM_MODEL_NAME,
+                torch_dtype=torch.float16,
+                device_map="auto"
+            )
+        elif llm == "gemini":
+            self.llm_type = "gemini"
+            self.llm_model = GeminiLLM()
+        else:
+            raise ValueError("llm must be 'local' or 'gemini'")
 
     def _load_metadata(self):
         metadata = []
@@ -60,28 +76,28 @@ class RAGPipeline:
         return [c for c, _ in ranked[:top_k]]
 
     def generate_answer(self, context_chunks, question, max_new_tokens=512):
-        """Generate final answer from top context chunks"""
-        context = "\n\n".join([chunk['text'] for chunk in context_chunks])
-        prompt = f"""You are a lore assistant. Answer the following question using only the given context from the lore. Be factual.
+            context = "\n\n".join([chunk['text'] for chunk in context_chunks])
+            prompt = f"""You are a lore assistant. Answer the following question using only the given context from the lore. Be factual.
 
-Context:
-{context}
+    Context:
+    {context}
 
-Question: {question}
-Answer:"""
+    Question: {question}
+    Answer:"""
 
-        inputs = self.llm_tokenizer(prompt, return_tensors="pt").to(self.llm_model.device)
-        outputs = self.llm_model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.3,
-            top_p=0.9
-        )
-
-        decoded = self.llm_tokenizer.decode(outputs[0], skip_special_tokens=True)
-        answer = decoded.split("Answer:")[-1].strip()
-        return answer
+            if self.llm_type == "local":
+                inputs = self.llm_tokenizer(prompt, return_tensors="pt").to(self.llm_model.device)
+                outputs = self.llm_model.generate(
+                    **inputs,
+                    max_new_tokens=max_new_tokens,
+                    do_sample=True,
+                    temperature=0.3,
+                    top_p=0.9
+                )
+                decoded = self.llm_tokenizer.decode(outputs[0], skip_special_tokens=True)
+                return decoded.split("Answer:")[-1].strip()
+            else:  # Gemini
+                return self.llm_model.generate(prompt, max_tokens=max_new_tokens)
 
     def query(self, question):
         """Full pipeline: search → rerank → generate"""
@@ -90,12 +106,26 @@ Answer:"""
         return self.generate_answer(top_chunks, question)
 
 
-# For direct testing
+class GeminiLLM:
+    def __init__(self, model_name="gemini-2.5-flash-lite"):
+        self.model = genai.GenerativeModel(model_name)
+
+    def generate(self, prompt, max_tokens=512):
+        response = self.model.generate_content(
+            prompt
+        )
+        # Gemini response text
+        return response.text
+
+
+
 if __name__ == "__main__":
-    rag = RAGPipeline()
+    rag = RAGPipeline(llm="gemini")
+
     while True:
         q = input("\nEnter question (or 'quit'): ")
         if q.lower() == "quit":
             break
         answer = rag.query(q)
         print("\nAnswer:\n", answer)
+
