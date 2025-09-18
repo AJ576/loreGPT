@@ -6,8 +6,8 @@ from sentence_transformers import SentenceTransformer, CrossEncoder
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-INDEX_FILE = "../data/index/faiss_index.index"
-META_FILE = "../data/index/meta.jsonl"
+INDEX_FILE = "data/index/faiss_index.index"
+META_FILE = "data/index/meta.jsonl"
 EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
 RERANK_MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 LLM_MODEL_NAME = "microsoft/phi-3-mini-4k-instruct"

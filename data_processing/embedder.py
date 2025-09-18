@@ -2,8 +2,8 @@ import sentence_transformers
 import json
 from tqdm import tqdm
 
-INPUT = "../data/embeddings/chunked_doc_deduped.jsonl"
-OUTPUT = "../data/embeddings/embeddings.jsonl"
+INPUT = "data/embeddings/chunked_doc_deduped.jsonl"
+OUTPUT = "data/embeddings/embeddings.jsonl"
 MODEL_NAME = "all-MiniLM-L6-v2"
 
 def embed_all_chunks(INPUT, OUTPUT):
