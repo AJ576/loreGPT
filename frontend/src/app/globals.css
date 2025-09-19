@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+:root {
+  /* Ancient Copper & Gold Theme */
+  --background: #1a1612;
+  --foreground: #e8d5b7;
+  --copper: #b87333;
+  --bronze: #cd7f32;
+  --gold: #ffd700;
+  --copper-dark: #8b4513;
+  --parchment: #f4e4bc;
+  --shadow: rgba(184, 115, 51, 0.3);
+  --glow: rgba(255, 215, 0, 0.4);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --background: #2a1f1a;
+    --foreground: #f0e6d2;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-cinzel), serif;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(184, 115, 51, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
+  min-height: 100vh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--copper-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--copper);
+  border-radius: 4px;
+  border: 1px solid var(--copper-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bronze);
+}
+
+/* Custom utility classes */
+.text-copper { color: var(--copper); }
+.text-bronze { color: var(--bronze); }
+.text-gold { color: var(--gold); }
+.text-parchment { color: var(--parchment); }
+.bg-copper { background-color: var(--copper); }
+.bg-bronze { background-color: var(--bronze); }
+.bg-copper-dark { background-color: var(--copper-dark); }
+.border-copper { border-color: var(--copper); }
+.border-bronze { border-color: var(--bronze); }
+.border-gold { border-color: var(--gold); }
+
+/* Archaic styling elements */
+.ancient-border {
+  border: 2px solid var(--copper);
+  border-image: repeating-linear-gradient(
+    45deg,
+    var(--copper),
+    var(--copper) 10px,
+    var(--bronze) 10px,
+    var(--bronze) 20px
+  ) 2;
+  box-shadow: 
+    inset 0 0 10px var(--shadow),
+    0 0 20px var(--shadow);
+}
+
+.glow-text {
+  text-shadow: 0 0 10px var(--glow);
+}
+
+.parchment-bg {
+  background: linear-gradient(45deg, 
+    rgba(244, 228, 188, 0.1) 0%, 
+    rgba(244, 228, 188, 0.05) 50%, 
+    rgba(244, 228, 188, 0.1) 100%);
+}
+
+.runic-accent::before {
+  content: "⚬";
+  color: var(--gold);
+  margin-right: 8px;
+}
+
+.runic-accent::after {
+  content: "⚬";
+  color: var(--gold);
+  margin-left: 8px;
+}

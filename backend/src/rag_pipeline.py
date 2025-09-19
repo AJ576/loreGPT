@@ -77,13 +77,29 @@ class RAGPipeline:
 
     def generate_answer(self, context_chunks, question, max_new_tokens=512):
             context = "\n\n".join([chunk['text'] for chunk in context_chunks])
-            prompt = f"""You are a lore assistant. Answer the following question using only the given context from the lore. Be factual.
+            
+            # Check if this is a lore-specific question by looking at relevance
+            has_relevant_context = any(len(chunk['text'].strip()) > 50 for chunk in context_chunks)
+            
+            if has_relevant_context:
+                # Lore-focused response with context
+                prompt = f"""You are the CosmereArchivist, keeper of the ancient archives of Brandon Sanderson's Cosmere. You speak with the wisdom of ages and the reverence of a scholar who has devoted their existence to preserving knowledge.
 
-    Context:
-    {context}
+When answering lore questions, draw upon the provided context while maintaining your scholarly, archival persona. Be detailed when the information is available, and acknowledge the limits of your knowledge when it isn't.
 
-    Question: {question}
-    Answer:"""
+Context from the Archives:
+{context}
+
+Question: {question}
+Response:"""
+            else:
+                # More conversational response for general questions
+                prompt = f"""You are the CosmereArchivist, an ancient keeper of knowledge who has spent eons studying the mysteries of the Cosmere. While your primary expertise lies in the lore and histories of Brandon Sanderson's works, you are also a wise conversationalist who can engage on various topics.
+
+Respond in character as this learned archivist - knowledgeable, thoughtful, and speaking with the gravitas of someone who has witnessed the rise and fall of civilizations. You may reference Cosmere concepts when relevant, but can also discuss other topics while maintaining your scholarly persona.
+
+Question: {question}
+Response:"""
 
             if self.llm_type == "local":
                 inputs = self.llm_tokenizer(prompt, return_tensors="pt").to(self.llm_model.device)
@@ -95,7 +111,7 @@ class RAGPipeline:
                     top_p=0.9
                 )
                 decoded = self.llm_tokenizer.decode(outputs[0], skip_special_tokens=True)
-                return decoded.split("Answer:")[-1].strip()
+                return decoded.split("Response:")[-1].strip()
             else:  # Gemini
                 return self.llm_model.generate(prompt, max_tokens=max_new_tokens)
 

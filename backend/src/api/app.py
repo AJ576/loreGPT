@@ -1,5 +1,6 @@
 from typing import List
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from src.rag_pipeline import RAGPipeline
 
@@ -23,6 +24,15 @@ class SearchResponse(BaseModel):
 
 # Init FastAPI app
 app = FastAPI(title="CopperMind RAG API")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Frontend URLs
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 @app.post("/ask", response_model=QueryResponse)
 def ask_question(req: QueryRequest):
