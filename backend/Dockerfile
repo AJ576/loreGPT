@@ -1,23 +1,18 @@
-# Use Python base
+# Stage 1: lightweight Python
 FROM python:3.13-slim
 
-# Set work directory
+# Set working directory
 WORKDIR /app
 
-# Install system deps (if FAISS or numpy needs it)
-RUN apt-get update && apt-get install -y build-essential
-
-# Copy requirements
+# Copy only needed files
 COPY requirements.txt .
-
-# Install Python deps
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy everything
-COPY . .
+COPY src ./src
+COPY data/index ./data/index
 
-# Expose API port
+# Expose port
 EXPOSE 8000
 
-# Start app (adjust if you use Flask instead of FastAPI)
+# Run FastAPI with uvicorn
 CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
