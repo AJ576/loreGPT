@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from src.rag_pipeline import RAGPipeline
 
 # Load pipeline once at startup
-rag = RAGPipeline(llm='gemini')
+rag = RAGPipeline()
 
 # Define request/response schemas
 class QueryRequest(BaseModel):
