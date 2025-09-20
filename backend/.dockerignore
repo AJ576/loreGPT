@@ -1,0 +1,6 @@
+*.ipynb
+data/raw/
+data/embeddings/
+data_processing/
+__pycache__/
+.env
