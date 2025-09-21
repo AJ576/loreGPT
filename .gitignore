@@ -1,2 +1,4 @@
 *.env
 __pycache__/
+backend/data/raw_data/
+backend/data/embeddings/
