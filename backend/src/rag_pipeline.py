@@ -12,7 +12,7 @@ genai.configure(api_key=api_key)
 
 INDEX_FILE = "data/index/faiss_index.index"
 META_FILE = "data/index/meta.jsonl"
-EMBED_MODEL_NAME = "all-MiniLM-L6-v2"  # keep same model so index still works
+EMBED_MODEL_NAME =  "data/models/embeddings"  # keep same model so index still works
 
 class GeminiLLM:
     def __init__(self, model_name="gemini-2.5-flash-lite"):

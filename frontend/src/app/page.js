@@ -36,7 +36,7 @@ export default function CosmereArchivistChat() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://cosmerearchivist.onrender.com/ask', {
+      const response = await fetch('https://loreGpt.onrender.com/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
