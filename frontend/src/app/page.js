@@ -15,6 +15,7 @@ export default function CosmereArchivistChat() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState("Consulting the archives...");
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -22,6 +23,34 @@ export default function CosmereArchivistChat() {
   };
 
   useEffect(scrollToBottom, [messages]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingStatus("Consulting the archives...");
+      return;
+    }
+    const timer1 = setTimeout(() => {
+      setLoadingStatus("The archives are slumbering... Awakening the server (~45s)...");
+    }, 7000);
+    const timer2 = setTimeout(() => {
+      setLoadingStatus("Server awakened! Loading lore models into memory...");
+    }, 28000);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [isLoading]);
+
+  const fetchWithTimeout = async (url, options, timeoutMs = 90000) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(id);
+    }
+  };
 
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -34,20 +63,52 @@ export default function CosmereArchivistChat() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const queryText = inputValue;
     setInputValue('');
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/ask`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ question: inputValue }),
-      });
+      let response;
+      try {
+        response = await fetchWithTimeout(`${API_BASE_URL}/ask`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ question: queryText }),
+        }, 90000);
+      } catch (err) {
+        // If initial connection was refused or dropped while Render boots, retry once
+        if (err.name !== 'AbortError') {
+          setLoadingStatus("Awakening in progress... Reconnecting to the archive...");
+          await new Promise(r => setTimeout(r, 4000));
+          response = await fetchWithTimeout(`${API_BASE_URL}/ask`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ question: queryText }),
+          }, 60000);
+        } else {
+          throw err;
+        }
+      }
+
+      // If Render gateway returned 502/503/504 while container was initializing, retry once
+      if (response && [502, 503, 504].includes(response.status)) {
+        setLoadingStatus("Server just awakened, completing boot sequence... Retrying...");
+        await new Promise(r => setTimeout(r, 5000));
+        response = await fetchWithTimeout(`${API_BASE_URL}/ask`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ question: queryText }),
+        }, 60000);
+      }
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        throw new Error(`Failed to get response (Status: ${response.status})`);
       }
 
       const data = await response.json();
@@ -61,9 +122,13 @@ export default function CosmereArchivistChat() {
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
+      let errorText = "Forgive me, the connection to the archive seems to be severed. Please ensure the keeper's server is awakened.";
+      if (error.name === 'AbortError') {
+        errorText = "The archive took too long to awaken (>90s). The server may still be starting up—please try asking again in a few moments.";
+      }
       const errorMessage = {
         id: Date.now() + 1,
-        text: "Forgive me, the connection to the archive seems to be severed. Please ensure the keeper's server is awakened.",
+        text: errorText,
         isBot: true,
         timestamp: new Date()
       };
@@ -144,7 +209,7 @@ export default function CosmereArchivistChat() {
                       <div className="w-2 h-2 bg-gold rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
                       <div className="w-2 h-2 bg-gold rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
                     </div>
-                    <span className="text-sm text-bronze">Consulting the archives...</span>
+                    <span className="text-sm text-bronze">{loadingStatus}</span>
                   </div>
                 </div>
               </div>
