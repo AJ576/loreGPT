@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+
 export default function CosmereArchivistChat() {
   const [messages, setMessages] = useState([
     {
@@ -36,7 +38,7 @@ export default function CosmereArchivistChat() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://cosmerearchivist.onrender.com/ask', {
+      const response = await fetch(`${API_BASE_URL}/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
