@@ -26,7 +26,7 @@ The project crawls and processes thousands of documents into a searchable knowle
 ## 🛠️ Local Setup
 ```bash
 # Clone repo
-git clone https://github.com/<your-username>/cosmere-archivist.git
+git clone https://github.com/AJ576/cosmere-archivist.git
 cd cosmere-archivist
 
 # Backend
